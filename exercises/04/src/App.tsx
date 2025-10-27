@@ -77,7 +77,7 @@ function App() {
                   >
                     <div className="cart-item-info">
                       <span className="cart-item-name">{item.name}</span>
-                      <span className="cart-item-price">${item.price.toFixed(2)}</span>
+                      <span className="cart-item-price"> ${item.price.toFixed(2)}</span>
                     </div>
                     <button 
                       data-testid={`remove-${item.cartIndex}`}
