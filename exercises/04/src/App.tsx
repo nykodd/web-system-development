@@ -7,10 +7,6 @@ interface Product {
   price: number
 }
 
-interface CartItem extends Product {
-  cartIndex: number
-}
-
 function App() {
   // Define products
   const products: Product[] = [
@@ -20,17 +16,20 @@ function App() {
     { id: 4, name: 'USB-C Cable', price: 12.99 }
   ]
 
-  const [cart, setCart] = useState<CartItem[]>([])
+  const [cart, setCart] = useState<Product[]>([])
 
   // Add product to cart
   const addToCart = (product: Product) => {
-    const cartIndex = cart.length
-    setCart([...cart, { ...product, cartIndex }])
+    //add it only once
+    if (cart.some(item => item.id === product.id)) {
+      return
+    }
+    setCart([...cart, product])
   }
 
   // Remove product from cart
-  const removeFromCart = (cartIndex: number) => {
-    setCart(cart.filter(item => item.cartIndex !== cartIndex))
+  const removeFromCart = (product: Product) => {
+    setCart(cart.filter(item => item.id !== product.id))
   }
 
   // Calculate total price
@@ -39,9 +38,7 @@ function App() {
   return (
     <div className="app-container">
       <h1>Shopping Cart</h1>
-      
       <div className="content">
-        {/* Products Section */}
         <div className="products-section">
           <h2>Products</h2>
           <div className="products-list">
@@ -49,7 +46,7 @@ function App() {
               <div key={product.id} className="product-card">
                 <h3>{product.name}</h3>
                 <p className="price">${product.price.toFixed(2)}</p>
-                <button 
+                <button
                   data-testid={`add-${index}`}
                   onClick={() => addToCart(product)}
                   className="add-button"
@@ -61,7 +58,6 @@ function App() {
           </div>
         </div>
 
-        {/* Cart Section */}
         <div className="cart-section">
           <h2>Cart</h2>
           {cart.length === 0 ? (
@@ -70,18 +66,18 @@ function App() {
             <>
               <div className="cart-items">
                 {cart.map((item) => (
-                  <div 
-                    key={item.cartIndex} 
-                    data-testid={`cart-item-${item.cartIndex}`}
+                  <div
+                    key={item.id}
+                    data-testid={`cart-item-${item.id}`}
                     className="cart-item"
                   >
                     <div className="cart-item-info">
                       <span className="cart-item-name">{item.name}</span>
                       <span className="cart-item-price">${item.price.toFixed(2)}</span>
                     </div>
-                    <button 
-                      data-testid={`remove-${item.cartIndex}`}
-                      onClick={() => removeFromCart(item.cartIndex)}
+                    <button
+                      data-testid={`remove-${item.id}`}
+                      onClick={() => removeFromCart(item)}
                       className="remove-button"
                     >
                       Remove
@@ -89,7 +85,9 @@ function App() {
                   </div>
                 ))}
               </div>
+
               <div className="cart-total">
+                <button onClick={() => setCart([])} className="clear-cart-button">Clear Cart</button>
                 <strong>Total: </strong>
                 <span data-testid="cart-total">${totalPrice.toFixed(2)}</span>
               </div>
