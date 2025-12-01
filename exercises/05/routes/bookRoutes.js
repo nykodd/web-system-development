@@ -19,45 +19,51 @@ bookRouter.get('/', (req, res) => {
 // GET book by id
 bookRouter.get('/:id', (req, res) => {
     const id = parseInt(req.params.id);
-    
+
     if (isNaN(id)) {
         return res.status(400).json({ error: 'Invalid book ID' });
     }
-    
+
     const book = books.find(book => book.id === id);
     if (!book) {
         return res.status(404).json({ error: 'Book not found' });
     }
-    
+
     res.json(book);
 });
 
 // DELETE book by id
 bookRouter.delete('/:id', (req, res) => {
     const id = parseInt(req.params.id);
-    
+
     if (isNaN(id)) {
         return res.status(400).json({ error: 'Invalid book ID' });
     }
-    
+
     const bookIndex = books.findIndex(book => book.id === id);
     if (bookIndex === -1) {
         return res.status(404).json({ error: 'Book not found' });
     }
-    
+
     books.splice(bookIndex, 1);
     res.status(204).send();
 });
 
 // POST create new book
 bookRouter.post('/', (req, res) => {
-    const { title, author } = req.body;
-    
+    const { id, title, author } = req.body;
+    let newId;
+    console.log(books.length);
+
+    if (!id) {
+        newId = books.length + 1;
+    }
+
     if (!title || !author) {
         return res.status(400).json({ error: 'Title and author are required' });
     }
-    
-    const newBook = { id: books.length + 1, title, author };
+    const finalizedId = id || newId;
+    const newBook = { id: finalizedId, title, author };
     books.push(newBook);
     res.status(201).json(newBook);
 });
