@@ -62,7 +62,17 @@ bookRouter.post('/', (req, res) => {
     if (!title || !author) {
         return res.status(400).json({ error: 'Title and author are required' });
     }
+
+    count = 0;
+    for(const book of books) {
+        count++;
+        if(book.id !== count) {
+            newId = count;
+            break;
+        }
+    }
     const finalizedId = id || newId;
+    
     const newBook = { id: finalizedId, title, author };
     books.push(newBook);
     res.status(201).json(newBook);
