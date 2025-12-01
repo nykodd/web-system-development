@@ -7,6 +7,8 @@ import 'dotenv/config';
 
 const app = express();
 
+app.use(express.json());
+
 // Routes
 app.use('/books', bookRouter);
 app.use('/', indexRouter);
