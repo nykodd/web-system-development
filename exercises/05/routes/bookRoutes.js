@@ -64,6 +64,12 @@ bookRouter.post('/', (req, res) => {
     }
 
     let count = 0;
+<<<<<<< HEAD
+=======
+
+    books.sort((a, b) => a.id - b.id);
+    
+>>>>>>> 8dd43b476f473c75bdf4c66a204bd8d2952e7aa9
     for(const book of books) {
         count++;
         if(book.id !== count) {
