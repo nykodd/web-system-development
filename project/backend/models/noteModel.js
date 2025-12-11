@@ -8,7 +8,7 @@ async function getNotes() {
             users.username
             FROM notes
             LEFT JOIN users
-            ON notes.user_id = users.id`
+            ON notes.id_note_user = users.id_user`
         );
         return result.rows;
     } catch (error) {
@@ -26,7 +26,7 @@ async function getNoteById(id) {
             users.username
             FROM notes
             LEFT JOIN users
-            ON notes.user_id = users.id WHERE notes.id = $1`,
+            ON notes.id_note_user = users.id_user WHERE notes.id_note = $1`,
             [id]
         );
 
@@ -39,7 +39,7 @@ async function getNoteById(id) {
 
 async function deleteNote(id) {
     try {
-        const result = await pool.query('DELETE FROM notes WHERE id = $1', [id]);
+        const result = await pool.query('DELETE FROM notes WHERE id_note = $1', [id]);
         return result.rowCount > 0;
     } catch (error) {
         console.error('Database error:', error.message);
@@ -50,7 +50,7 @@ async function deleteNote(id) {
 async function createNote(note) {
     try {
         const insertResult = await pool.query(
-            'INSERT INTO notes (content, important, user_id) VALUES ($1, $2, $3) RETURNING id, content, important, user_id',
+            'INSERT INTO notes (content, important, id_note_stat, id_note_user) VALUES ($1, $2, $3, $4) RETURNING id_note, content, important, id_note_stat, id_note_user',
             [note.content, note.important, note.user_id]
         );
         return insertResult.rows[0];

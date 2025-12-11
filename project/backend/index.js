@@ -8,10 +8,11 @@ import { fileURLToPath } from 'url';
 import indexRouter from './routes/indexRoutes.js';
 import noteRouter from './routes/noteRoutes.js';
 import userRouter from './routes/userRoutes.js';
-
+import statusRouter from './routes/statusRoutes.js';
 
 import { requestLogger } from './middlewares/requestLoggerMiddleware.js';
 import { unknownEndpoint } from './middlewares/unknownEndpointMiddleware.js';
+
 
 const app = express();
 // function myMiddleware(req, res, next) {
@@ -34,6 +35,7 @@ app.use(cors())
 app.use('/', indexRouter);
 app.use('/api/notes', noteRouter);
 app.use('/api/users', userRouter);
+app.use('/api/status', statusRouter)
 
 
 // Error handling

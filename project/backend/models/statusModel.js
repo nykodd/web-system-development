@@ -1,7 +1,8 @@
 import pool from '../db/pool.js';
-async function getUsers() {
+
+async function getStatuses() {
     try {
-        const result = await pool.query('SELECT * FROM users');
+        const result = await pool.query('SELECT * FROM status');
         return result.rows;
     } catch (error) {
         console.error('Database connection error:', error.message);
@@ -9,9 +10,9 @@ async function getUsers() {
         throw new Error(`Database error: ${error.message}`);
     }
 }
-async function getUserById(id) {
+async function getStatusById(id) {
     try {
-        const result = await pool.query('SELECT * FROM users WHERE id_user = $1', [id]);
+        const result = await pool.query('SELECT * FROM status WHERE id_stat = $1', [id]);
         return result.rows[0] || null;
     } catch (error) {
         console.error('Database connection error:', error.message);
@@ -19,6 +20,6 @@ async function getUserById(id) {
     }
 }
 export default {
-    getUsers,
-    getUserById,
+    getStatuses,
+    getStatusById,
 };
