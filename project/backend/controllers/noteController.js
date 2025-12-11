@@ -1,4 +1,3 @@
-import db from '../db.js';
 import noteModel from '../models/noteModel.js';
 import { noteSchema } from '../db/noteSchema.js';
 
@@ -12,13 +11,13 @@ export async function createNote(request, response) {
     if (result.error) {
         return response.status(400).json(result.error.issues);
     }
-    const user_id = request.body.user_id;
+    const user_id = request.body.id_note_user;
     if (!user_id) {
-        return response.status(400).json({ error: 'user_id is required' });
+        return response.status(400).json({ error: 'id_note_user is required' });
     }
     const newNote = await noteModel.createNote({
         ...result.data,
-        user_id: Number(user_id),
+        id_note_user: Number(user_id),
         });
 
     response.status(201).json(newNote);
@@ -30,16 +29,11 @@ export async function updateNote(request, response) {
     if (result.error) {
         return response.status(400).json(result.error.issues);
     }
-    const note = await noteModel.getNoteById(id);
-    if (note) {
-        const updatedNote = {
-            id: note.id,
-            content: result.content,
-            important: result.important,
-        };
-        await db.updateNote(id, updatedNote);
-        response.json(updatedNote);
+    const updatedNote = await noteModel.updateNote(id, result.data);
+    if (!updatedNote) {
+        return response.status(404).json({ error: 'Note not found' });
     }
+    response.json(updatedNote);
 }
 
 

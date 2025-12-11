@@ -4,43 +4,45 @@ import './App.css'
 
 const baseUrl = 'http://localhost:3001/api/notes'
 const usersUrl = 'http://localhost:3001/api/users'
-
-const COLUMNS = {
-  todo: { id: 'todo', title: 'To Do', color: '#eb5a46' },
-  inProgress: { id: 'inProgress', title: 'In Progress', color: '#f2d600' },
-  done: { id: 'done', title: 'Done', color: '#61bd4f' }
-}
+const statusUrl = 'http://localhost:3001/api/status'
 
 const App = () => {
   const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('')
-  const [selectedUserId, setSelectedUserId] = useState('')
+  const [selectedUserId, setSelectedUserId] = useState(undefined)
   const [users, setUsers] = useState([])
+  const [statuses, setStatuses] = useState([])
   const [loading, setLoading] = useState(true)
   const [addingToColumn, setAddingToColumn] = useState(null)
 
   useEffect(() => {
+    // Load statuses first
+    axios
+      .get(statusUrl)
+      .then(response => {
+        setStatuses(response.data)
+      })
+      .catch((error) => {
+        console.error('Failed to load statuses', error)
+      })
+
     axios
       .get(baseUrl)
       .then(response => {
-        // Add default status to notes that don't have one
-        const notesWithStatus = response.data.map(note => ({
-          ...note,
-          status: note.status || 'todo'
-        }))
-        setNotes(notesWithStatus)
+        setNotes(response.data)
       })
       .catch((error) => {
         console.error('Failed to load notes', error)
       })
       .finally(() => setLoading(false))
-    
+
     axios
       .get(usersUrl)
       .then(response => {
         setUsers(response.data)
         if (response.data.length > 0) {
-          setSelectedUserId(response.data[0].id)
+          setSelectedUserId(Number(response.data[0].id_user))
+          console.log("data response", response.data[0].id_user);
         }
       })
       .catch((error) => {
@@ -50,22 +52,35 @@ const App = () => {
 
   const deleteNote = (note) => {
     axios
-      .delete(`${baseUrl}/${note.id}`)
+      .delete(`${baseUrl}/${note.id_note}`)
       .then(() => {
-        setNotes(notes.filter(n => n.id !== note.id))
+        setNotes(notes.filter(n => n.id_note !== note.id_note))
       })
       .catch((error) => {
         console.error('Failed to delete note', error)
       })
   }
 
-  const moveNote = (note, newStatus) => {
-    setNotes(notes.map(n => 
-      n.id === note.id ? { ...n, status: newStatus } : n
-    ))
+  const moveNote = (note, newStatusId) => {
+    axios
+      .put(`${baseUrl}/${note.id_note}`, {
+        content: note.content,
+        important: note.important,
+        id_note_stat: newStatusId,
+        id_note_user: note.id_note_user
+      })
+      .then((response) => {
+        // Update the note with the response data which includes full status info
+        setNotes(notes.map(n =>
+          n.id_note === note.id_note ? response.data : n
+        ))
+      })
+      .catch((error) => {
+        console.error('Failed to update note status', error)
+      })
   }
 
-  const addNote = (event, columnId) => {
+  const addNote = (event, statusId) => {
     event.preventDefault()
     if (!selectedUserId) {
       alert('Please select a user')
@@ -76,13 +91,16 @@ const App = () => {
     const noteObject = {
       content: newNote,
       important: Math.random() < 0.5,
-      user_id: Number(selectedUserId)
+      id_note_user: Number(selectedUserId)
     }
 
     axios
-      .post(baseUrl, noteObject)
+      .post(baseUrl, {
+        ...noteObject,
+        id_note_stat: statusId
+      })
       .then((response) => {
-        setNotes(notes.concat({ ...response.data, status: columnId }))
+        setNotes(notes.concat(response.data))
         setNewNote('')
         setAddingToColumn(null)
       })
@@ -91,20 +109,63 @@ const App = () => {
       })
   }
 
-  const getNotesForColumn = (columnId) => {
-    return notes.filter(note => note.status === columnId)
+  const getNotesForUser = (userId) => {
+    console.log(selectedUserId, " Users notes ", notes.filter(note => note.id_note_user === userId));
+    return notes.filter(note => note.id_note_user === userId)
+
   }
 
-  const getNextStatus = (currentStatus) => {
-    const statuses = ['todo', 'inProgress', 'done']
-    const currentIndex = statuses.indexOf(currentStatus)
-    return statuses[(currentIndex + 1) % statuses.length]
+  const getNotesForColumn = (statusId,userId) => {
+    // console.log("column notes ", notes.filter(note => note.id_note_stat === statusId));
+    return getNotesForUser(userId).filter(note => note.id_note_stat === statusId);
   }
 
-  const getPrevStatus = (currentStatus) => {
-    const statuses = ['todo', 'inProgress', 'done']
-    const currentIndex = statuses.indexOf(currentStatus)
-    return statuses[(currentIndex - 1 + statuses.length) % statuses.length]
+  const getNextStatus = (currentStatusId) => {
+    if (!currentStatusId || statuses.length === 0) return statuses[0]?.id_stat
+    const currentIndex = statuses.findIndex(s => s.id_stat === currentStatusId)
+    const nextIndex = (currentIndex + 1) % statuses.length
+    // console.log(statuses[nextIndex]?.id_stat);
+    return statuses[nextIndex]?.id_stat
+  }
+
+  const getPrevStatus = (currentStatusId) => {
+    if (!currentStatusId || statuses.length === 0) return statuses[0]?.id_stat
+    const currentIndex = statuses.findIndex(s => s.id_stat === currentStatusId)
+    const prevIndex = (currentIndex - 1 + statuses.length) % statuses.length
+    return statuses[prevIndex]?.id_stat
+  }
+
+  const moveStatus = (status, direction) => {
+    const currentIndex = statuses.findIndex(s => s.id_stat === status.id_stat)
+    let newPriority
+
+    if (direction === 'left' && currentIndex > 0) {
+      // Move up (left): swap priority with the status before it
+      newPriority = statuses[currentIndex - 1].priority
+    } else if (direction === 'right' && currentIndex < statuses.length - 1) {
+      // Move down (right): swap priority with the status after it
+      newPriority = statuses[currentIndex + 1].priority
+    } else {
+      return // Can't move in that direction
+    }
+
+    // The backend will automatically shift other statuses to make room
+    axios
+      .put(`${statusUrl}/${status.id_stat}`, {
+        stat_name: status.stat_name,
+        color: status.color,
+        priority: newPriority
+      })
+      .then(() => {
+        // Reload statuses to get the updated order (after backend shifts priorities)
+        return axios.get(statusUrl)
+      })
+      .then((response) => {
+        setStatuses(response.data)
+      })
+      .catch((error) => {
+        console.error('Failed to move status', error)
+      })
   }
 
   if (loading) {
@@ -122,13 +183,13 @@ const App = () => {
         <h1>📋 Task Board</h1>
         <div className="user-selector">
           <label>User:</label>
-          <select 
-            value={selectedUserId} 
-            onChange={(e) => setSelectedUserId(e.target.value)}
+          <select
+            value={selectedUserId}
+            onChange={(e) => setSelectedUserId(Number(e.target.value))}
           >
             {users.map(user => (
-              <option key={user.id} value={user.id}>
-                {user.username || `User ${user.id}`}
+              <option key={user.id_user} value={user.id_user}>
+                {user.username || `User ${user.id_user}`}
               </option>
             ))}
           </select>
@@ -136,40 +197,74 @@ const App = () => {
       </header>
 
       <div className="board">
-        {Object.values(COLUMNS).map(column => (
-          <div key={column.id} className="column">
-            <div className="column-header" style={{ borderTopColor: column.color }}>
-              <h2>{column.title}</h2>
-              <span className="card-count">{getNotesForColumn(column.id).length}</span>
+        {statuses.map(status => (
+          <div key={status.id_stat} className="column">
+            <div className="column-header" style={{ borderTopColor: status.color }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {status.priority > 1 && (
+                  <button
+                    className="status-move-btn"
+                    onClick={() => moveStatus(status, 'up')}
+                    title="Move status left"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '18px',
+                      padding: '4px 8px'
+                    }}
+                  >
+                    ◀
+                  </button>
+                )}
+                <h2 style={{ margin: 0, flex: 1 }}>{status.stat_name}</h2>
+                {status.priority < statuses.length && (
+                  <button
+                    className="status-move-btn"
+                    onClick={() => moveStatus(status, 'down')}
+                    title="Move status right"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '18px',
+                      padding: '4px 8px'
+                    }}
+                  >
+                    ▶
+                  </button>
+                )}
+              </div>
+              <span className="card-count">{getNotesForColumn(status.id_stat,selectedUserId).length}</span>
             </div>
-
+         
             <div className="cards-container">
-              {getNotesForColumn(column.id).map(note => (
-                <div key={note.id} className="card">
+              {getNotesForColumn(status.id_stat,selectedUserId).map(note => (
+                <div key={note.id_note} className="card">
                   <div className="card-content">{note.content}</div>
                   <div className="card-meta">
                     {note.important && <span className="important-badge">★ Important</span>}
                   </div>
                   <div className="card-actions">
-                    {column.id !== 'todo' && (
-                      <button 
+                    {status.priority > 1 && (
+                      <button
                         className="move-btn move-left"
-                        onClick={() => moveNote(note, getPrevStatus(note.status))}
+                        onClick={() => moveNote(note, getPrevStatus(note.id_note_stat))}
                         title="Move left"
                       >
                         ←
                       </button>
                     )}
-                    {column.id !== 'done' && (
-                      <button 
+                    {status.priority < statuses.length && (
+                      <button
                         className="move-btn move-right"
-                        onClick={() => moveNote(note, getNextStatus(note.status))}
+                        onClick={() => moveNote(note, getNextStatus(note.id_note_stat))}
                         title="Move right"
                       >
                         →
                       </button>
                     )}
-                    <button 
+                    <button
                       className="delete-btn"
                       onClick={() => deleteNote(note)}
                       title="Delete"
@@ -180,8 +275,8 @@ const App = () => {
                 </div>
               ))}
 
-              {addingToColumn === column.id ? (
-                <form className="add-card-form" onSubmit={(e) => addNote(e, column.id)}>
+              {addingToColumn === status.id_stat ? (
+                <form className="add-card-form" onSubmit={(e) => addNote(e, status.id_stat)}>
                   <textarea
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
@@ -190,8 +285,8 @@ const App = () => {
                   />
                   <div className="form-actions">
                     <button type="submit" className="add-btn">Add Card</button>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="cancel-btn"
                       onClick={() => {
                         setAddingToColumn(null)
@@ -203,9 +298,9 @@ const App = () => {
                   </div>
                 </form>
               ) : (
-                <button 
+                <button
                   className="add-card-btn"
-                  onClick={() => setAddingToColumn(column.id)}
+                  onClick={() => setAddingToColumn(status.id_stat)}
                 >
                   + Add a card
                 </button>
