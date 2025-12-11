@@ -1,42 +1,345 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* Trello-style Board Layout */
+
+* {
+  box-sizing: border-box;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.trello-app {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0079bf 0%, #5067c5 50%, #89609e 100%);
+  padding: 0;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
+/* Header */
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(4px);
+}
+
+.board-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.user-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.user-selector select {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.user-selector select:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.user-selector select option {
+  background: #2c3e50;
+  color: #fff;
+}
+
+/* Board */
+.board {
+  display: flex;
+  gap: 12px;
+  padding: 20px;
+  overflow-x: auto;
+  min-height: calc(100vh - 60px);
+  align-items: flex-start;
+}
+
+/* Columns */
+.column {
+  flex: 0 0 280px;
+  background: #ebecf0;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 100px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.column-header {
+  padding: 12px;
+  border-top: 4px solid;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.column-header h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #172b4d;
+}
+
+.card-count {
+  background: rgba(0, 0, 0, 0.1);
+  color: #5e6c84;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Cards Container */
+.cards-container {
+  padding: 0 8px 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-content {
+  color: #172b4d;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+  margin-bottom: 8px;
+}
+
+.card-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.important-badge {
+  background: #ffeaa7;
+  color: #b7950b;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.card:hover .card-actions {
+  opacity: 1;
+}
+
+.move-btn,
+.delete-btn {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.move-btn {
+  background: #e4e6ea;
+  color: #5e6c84;
+}
+
+.move-btn:hover {
+  background: #dfe1e6;
+  color: #172b4d;
+}
+
+.delete-btn {
+  background: #ffebee;
+  color: #c62828;
+  margin-left: auto;
+}
+
+.delete-btn:hover {
+  background: #ef5350;
+  color: #fff;
+}
+
+/* Add Card */
+.add-card-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #5e6c84;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.add-card-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #172b4d;
+}
+
+.add-card-form {
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.add-card-form textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  resize: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #172b4d;
+  outline: none;
+}
+
+.add-card-form textarea::placeholder {
+  color: #a5adba;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.add-btn {
+  padding: 8px 16px;
+  background: #0079bf;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.add-btn:hover {
+  background: #026aa7;
+}
+
+.cancel-btn {
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: #5e6c84;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.cancel-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0079bf 0%, #5067c5 50%, #89609e 100%);
+  color: #fff;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+/* Scrollbar Styling */
+.cards-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cards-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cards-container::-webkit-scrollbar-thumb {
+  background: #c4c9cc;
+  border-radius: 4px;
+}
+
+.cards-container::-webkit-scrollbar-thumb:hover {
+  background: #a5adba;
+}
+
+.board::-webkit-scrollbar {
+  height: 12px;
+}
+
+.board::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+.board::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+}
+
+.board::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .board-header {
+    flex-direction: column;
+    gap: 12px;
   }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+  
+  .column {
+    flex: 0 0 260px;
+  }
 }
