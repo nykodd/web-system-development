@@ -131,6 +131,54 @@
   line-height: 1.4;
   word-wrap: break-word;
   margin-bottom: 8px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.card-content:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.edit-card-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-card-form textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  border: 2px solid #0079bf;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #172b4d;
+  outline: none;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.save-btn {
+  padding: 6px 12px;
+  background: #0079bf;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.save-btn:hover {
+  background: #026aa7;
 }
 
 .card-meta {
@@ -160,8 +208,10 @@
   opacity: 1;
 }
 
+/* common styles for all action buttons */
 .move-btn,
-.delete-btn {
+.delete-btn,
+.done-btn {
   padding: 4px 10px;
   border: none;
   border-radius: 4px;
@@ -234,6 +284,37 @@
   color: #a5adba;
 }
 
+.important-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #5e6c84;
+  transition: color 0.15s ease;
+}
+
+.important-checkbox:hover {
+  color: #172b4d;
+}
+
+.important-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #f1c40f;
+}
+
+.important-checkbox span {
+  user-select: none;
+}
+
+.important-checkbox input[type="checkbox"]:checked+span {
+  color: #b7950b;
+  font-weight: 500;
+}
+
 .form-actions {
   display: flex;
   gap: 8px;
@@ -268,6 +349,16 @@
 
 .cancel-btn:hover {
   background: rgba(0, 0, 0, 0.05);
+}
+
+.done-btn {
+  background: #aafcc9;
+  color: #2e7d32;
+}
+
+.done-btn:hover {
+  background: #538357;
+  color: #fff;
 }
 
 /* Loading State */
@@ -338,7 +429,7 @@
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .column {
     flex: 0 0 260px;
   }

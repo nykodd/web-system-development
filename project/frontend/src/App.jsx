@@ -14,6 +14,10 @@ const App = () => {
   const [statuses, setStatuses] = useState([])
   const [loading, setLoading] = useState(true)
   const [addingToColumn, setAddingToColumn] = useState(null)
+  const [isImportant, setIsImportant] = useState(false)
+  const [editingNoteId, setEditingNoteId] = useState(null)
+  const [editText, setEditText] = useState('')
+  const [editImportant, setEditImportant] = useState(false)
 
   useEffect(() => {
     // Load statuses first
@@ -61,6 +65,41 @@ const App = () => {
       })
   }
 
+  const startEditing = (note) => {
+    setEditingNoteId(note.id_note)
+    setEditText(note.content)
+    setEditImportant(note.important)
+  }
+
+  const cancelEditing = () => {
+    setEditingNoteId(null)
+    setEditText('')
+    setEditImportant(false)
+  }
+
+  const saveEdit = (note) => {
+    if (!editText.trim()) return
+
+    axios
+      .put(`${baseUrl}/${note.id_note}`, {
+        content: editText,
+        important: editImportant,
+        id_note_stat: note.id_note_stat,
+        id_note_user: note.id_note_user
+      })
+      .then((response) => {
+        setNotes(notes.map(n =>
+          n.id_note === note.id_note ? response.data : n
+        ))
+        setEditingNoteId(null)
+        setEditText('')
+        setEditImportant(false)
+      })
+      .catch((error) => {
+        console.error('Failed to update note', error)
+      })
+  }
+
   const moveNote = (note, newStatusId) => {
     axios
       .put(`${baseUrl}/${note.id_note}`, {
@@ -70,7 +109,7 @@ const App = () => {
         id_note_user: note.id_note_user
       })
       .then((response) => {
-        // Update the note with the response data which includes full status info
+        // update the note with the response data which includes full status info
         setNotes(notes.map(n =>
           n.id_note === note.id_note ? response.data : n
         ))
@@ -90,7 +129,7 @@ const App = () => {
 
     const noteObject = {
       content: newNote,
-      important: Math.random() < 0.5,
+      important: isImportant,
       id_note_user: Number(selectedUserId)
     }
 
@@ -102,6 +141,7 @@ const App = () => {
       .then((response) => {
         setNotes(notes.concat(response.data))
         setNewNote('')
+        setIsImportant(false)
         setAddingToColumn(null)
       })
       .catch((error) => {
@@ -140,13 +180,13 @@ const App = () => {
     let newPriority
 
     if (direction === 'left' && currentIndex > 0) {
-      // Move up (left): swap priority with the status before it
+      // move left: swap priority with the status before it
       newPriority = statuses[currentIndex - 1].priority
     } else if (direction === 'right' && currentIndex < statuses.length - 1) {
-      // Move down (right): swap priority with the status after it
+      // move right: swap priority with the status after it
       newPriority = statuses[currentIndex + 1].priority
     } else {
-      return // Can't move in that direction
+      return // cant move in that direction
     }
 
     // The backend will automatically shift other statuses to make room
@@ -157,7 +197,7 @@ const App = () => {
         priority: newPriority
       })
       .then(() => {
-        // Reload statuses to get the updated order (after backend shifts priorities)
+        // reload statuses to get the updated order 
         return axios.get(statusUrl)
       })
       .then((response) => {
@@ -180,7 +220,7 @@ const App = () => {
   return (
     <div className="trello-app">
       <header className="board-header">
-        <h1>📋 Task Board</h1>
+        <h1>Task Board</h1>
         <div className="user-selector">
           <label>User:</label>
           <select
@@ -204,7 +244,7 @@ const App = () => {
                 {status.priority > 1 && (
                   <button
                     className="status-move-btn"
-                    onClick={() => moveStatus(status, 'up')}
+                    onClick={() => moveStatus(status, 'left')}
                     title="Move status left"
                     style={{
                       background: 'none',
@@ -221,7 +261,7 @@ const App = () => {
                 {status.priority < statuses.length && (
                   <button
                     className="status-move-btn"
-                    onClick={() => moveStatus(status, 'down')}
+                    onClick={() => moveStatus(status, 'right')}
                     title="Move status right"
                     style={{
                       background: 'none',
@@ -241,37 +281,90 @@ const App = () => {
             <div className="cards-container">
               {getNotesForColumn(status.id_stat,selectedUserId).map(note => (
                 <div key={note.id_note} className="card">
-                  <div className="card-content">{note.content}</div>
-                  <div className="card-meta">
-                    {note.important && <span className="important-badge">★ Important</span>}
-                  </div>
-                  <div className="card-actions">
-                    {status.priority > 1 && (
-                      <button
-                        className="move-btn move-left"
-                        onClick={() => moveNote(note, getPrevStatus(note.id_note_stat))}
-                        title="Move left"
+                  {editingNoteId === note.id_note ? (
+                    <div className="edit-card-form">
+                      <textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        autoFocus
+                      />
+                      <label className="important-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={editImportant}
+                          onChange={(e) => setEditImportant(e.target.checked)}
+                        />
+                        <span>★ Important</span>
+                      </label>
+                      <div className="edit-actions">
+                        <button
+                          type="button"
+                          className="save-btn"
+                          onClick={() => saveEdit(note)}
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          className="cancel-btn"
+                          onClick={cancelEditing}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div
+                        className="card-content"
+                        onClick={() => startEditing(note)}
+                        title="Click to edit"
                       >
-                        ←
-                      </button>
-                    )}
-                    {status.priority < statuses.length && (
-                      <button
-                        className="move-btn move-right"
-                        onClick={() => moveNote(note, getNextStatus(note.id_note_stat))}
-                        title="Move right"
-                      >
-                        →
-                      </button>
-                    )}
-                    <button
-                      className="delete-btn"
-                      onClick={() => deleteNote(note)}
-                      title="Delete"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                        {note.content}
+                      </div>
+                      <div className="card-meta">
+                        {note.important && <span className="important-badge">★ Important</span>}
+                      </div>
+                      <div className="card-actions">
+                        {status.priority > 1 && (
+                          <button
+                            className="move-btn move-left"
+                            onClick={() => moveNote(note, getPrevStatus(note.id_note_stat))}
+                            title="Move left"
+                          >
+                            ←
+                          </button>
+                        )}
+                        {status.priority < statuses.length && (
+                          <button
+                            className="move-btn move-right"
+                            onClick={() => moveNote(note, getNextStatus(note.id_note_stat))}
+                            title="Move right"
+                          >
+                            →
+                          </button>
+                        )}
+                        <button
+                          className="delete-btn"
+                          onClick={() => deleteNote(note)}
+                          title="Delete"
+                        >
+                          ✕
+                        </button>
+                        {status.id_stat !== statuses[statuses.length - 1]?.id_stat && (
+                          <button
+                            type="button"
+                            className="done-btn"
+                            onClick={() => {
+                              moveNote(note, statuses[statuses.length - 1]?.id_stat)
+                            }}
+                          >
+                            ✓
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
 
@@ -283,6 +376,14 @@ const App = () => {
                     placeholder="Enter a title for this card..."
                     autoFocus
                   />
+                  <label className="important-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={isImportant}
+                      onChange={(e) => setIsImportant(e.target.checked)}
+                    />
+                    <span>★ Mark as Important</span>
+                  </label>
                   <div className="form-actions">
                     <button type="submit" className="add-btn">Add Card</button>
                     <button
@@ -291,10 +392,12 @@ const App = () => {
                       onClick={() => {
                         setAddingToColumn(null)
                         setNewNote('')
+                        setIsImportant(false)
                       }}
                     >
                       ✕
                     </button>
+                    
                   </div>
                 </form>
               ) : (
