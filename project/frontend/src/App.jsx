@@ -13,6 +13,7 @@ const App = () => {
   const [users, setUsers] = useState([])
   const [statuses, setStatuses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [dbInitialized, setDbInitialized] = useState(true)
   const [addingToColumn, setAddingToColumn] = useState(null)
   const [isImportant, setIsImportant] = useState(false)
   const [editingNoteId, setEditingNoteId] = useState(null)
@@ -25,9 +26,11 @@ const App = () => {
       .get(statusUrl)
       .then(response => {
         setStatuses(response.data)
+        setDbInitialized(response.data && response.data.length > 0)
       })
       .catch((error) => {
         console.error('Failed to load statuses', error)
+        setDbInitialized(false)
       })
 
     axios
@@ -175,6 +178,12 @@ const App = () => {
     return statuses[prevIndex]?.id_stat
   }
 
+  const getDoneStatus = () => {
+    // Find status named "Done" (case-insensitive)
+    const doneStatus = statuses.find(s => s.stat_name.toLowerCase() === 'done')
+    return doneStatus?.id_stat
+  }
+
   const moveStatus = (status, direction) => {
     const currentIndex = statuses.findIndex(s => s.id_stat === status.id_stat)
     let newPriority
@@ -213,6 +222,14 @@ const App = () => {
       <div className="loading-container">
         <div className="loading-spinner"></div>
         <p>Loading board...</p>
+      </div>
+    )
+  }
+
+  if (!dbInitialized) {
+    return (
+      <div className="loading-container">
+        <p style={{ fontSize: '1.2rem', color: '#fff' }}>No database initialised</p>
       </div>
     )
   }
@@ -351,12 +368,12 @@ const App = () => {
                         >
                           ✕
                         </button>
-                        {status.id_stat !== statuses[statuses.length - 1]?.id_stat && (
+                        {getDoneStatus() && status.id_stat !== getDoneStatus() && (
                           <button
                             type="button"
                             className="done-btn"
                             onClick={() => {
-                              moveNote(note, statuses[statuses.length - 1]?.id_stat)
+                              moveNote(note, getDoneStatus())
                             }}
                           >
                             ✓
