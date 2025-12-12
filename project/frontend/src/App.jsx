@@ -184,39 +184,6 @@ const App = () => {
     return doneStatus?.id_stat
   }
 
-  const moveStatus = (status, direction) => {
-    const currentIndex = statuses.findIndex(s => s.id_stat === status.id_stat)
-    let newPriority
-
-    if (direction === 'left' && currentIndex > 0) {
-      // move left: swap priority with the status before it
-      newPriority = statuses[currentIndex - 1].priority
-    } else if (direction === 'right' && currentIndex < statuses.length - 1) {
-      // move right: swap priority with the status after it
-      newPriority = statuses[currentIndex + 1].priority
-    } else {
-      return // cant move in that direction
-    }
-
-    // The backend will automatically shift other statuses to make room
-    axios
-      .put(`${statusUrl}/${status.id_stat}`, {
-        stat_name: status.stat_name,
-        color: status.color,
-        priority: newPriority
-      })
-      .then(() => {
-        // reload statuses to get the updated order 
-        return axios.get(statusUrl)
-      })
-      .then((response) => {
-        setStatuses(response.data)
-      })
-      .catch((error) => {
-        console.error('Failed to move status', error)
-      })
-  }
-
   if (loading) {
     return (
       <div className="loading-container">
@@ -258,39 +225,7 @@ const App = () => {
           <div key={status.id_stat} className="column">
             <div className="column-header" style={{ borderTopColor: status.color }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {status.priority > 1 && (
-                  <button
-                    className="status-move-btn"
-                    onClick={() => moveStatus(status, 'left')}
-                    title="Move status left"
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '18px',
-                      padding: '4px 8px'
-                    }}
-                  >
-                    ◀
-                  </button>
-                )}
                 <h2 style={{ margin: 0, flex: 1 }}>{status.stat_name}</h2>
-                {status.priority < statuses.length && (
-                  <button
-                    className="status-move-btn"
-                    onClick={() => moveStatus(status, 'right')}
-                    title="Move status right"
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '18px',
-                      padding: '4px 8px'
-                    }}
-                  >
-                    ▶
-                  </button>
-                )}
               </div>
               <span className="card-count">{getNotesForColumn(status.id_stat,selectedUserId).length}</span>
             </div>
