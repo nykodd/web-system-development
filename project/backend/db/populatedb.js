@@ -12,7 +12,7 @@ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
 CREATE TABLE status (
 id_stat SERIAL PRIMARY KEY,
-stat_name text NOT NULL,
+stat_name varchar(255) NOT NULL,
 color varchar(7) NOT NULL DEFAULT '#cccccc',
 priority INTEGER
 );
@@ -38,7 +38,7 @@ CREATE TRIGGER status_priority_trigger
 
 CREATE TABLE notes (
 id_note SERIAL PRIMARY KEY,
-content text NOT NULL,
+content varchar(255) NOT NULL,
 important boolean,
 id_note_stat INTEGER REFERENCES status(id_stat) ON DELETE SET NULL,
 id_note_user INTEGER REFERENCES users(id_user) ON DELETE SET NULL
