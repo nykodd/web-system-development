@@ -46,54 +46,32 @@ DB_PASSWORD=your_db_password
 PORT=3001
 ```
 
-## Database schema (tables)
-- users
-  - id_user (PK, serial)
-  - username (varchar, unique, not null)
-  - password (varchar, not null)
-  - email (varchar, not null)
-  - created_at (timestamp, default now)
-- status
-  - id_stat (PK, serial)
-  - stat_name (text, not null)
-  - color (varchar(7), not null, default '#cccccc')
-  - priority (integer, auto-assigned by trigger if null/0; lower = leftmost)
-  - Trigger `status_priority_trigger` sets `priority = COALESCE(MAX(priority),1)+1` when not provided.
-- notes
-  - id_note (PK, serial)
-  - content (text, not null)
-  - important (boolean)
-  - id_note_stat (FK -> status.id_stat, on delete set null)
-  - id_note_user (FK -> users.id_user, on delete set null)
+## Database schema
+Our database is in 3NF. There are places that can be improved, like some asserts against negative values... But, we think for this project, this is sufficient.
+<img width="1280" height="446" alt="image" src="https://github.com/user-attachments/assets/16f1135e-d041-4c76-85bc-c6720eb0ff78" />
+- NN - Not null
 
-## API documentation (selected)
+### Non-visible components
+- Function **assign_status_priority** - used to assign priority automatically upon creation of a new record
+- Trigger **status_priority_trigger** - used to apply the function on the status table before inserting a new record
+
+
+## API documentation
 Base URL: `http://localhost:3001/api`
 
 ### Notes
-- GET `/notes` → 200: list of notes with joined status/user info.
-- GET `/notes/:id` → 200/404: single note.
-- POST `/notes`
-  - Body: `{ content: string, important?: boolean, id_note_user: number, id_note_stat?: number }`
-  - 201: created note with status/user info.
-- PUT `/notes/:id`
-  - Body: same fields as POST (any subset to update).
-  - 200: updated note with status/user info; 404 if missing.
-- DELETE `/notes/:id` → 204/404
+- GET `/notes` → list of notes with joined status/user info.
+- GET `/notes/:id` → single note.
+- POST `/notes` → created note with status/user info.
+- PUT `/notes/:id` → same fields as POST (any subset to update).
+- DELETE `/notes/:id` → deletes a note based on the id
 
 ### Status
 - GET `/status` → ordered by `priority ASC`.
-- GET `/status/:id` → 200/404
-- POST `/status`
-  - Body: `{ stat_name: string, color?: '#RRGGBB', priority?: number }`
-  - If `priority` omitted/null/0, DB trigger assigns next priority.
-  - 201: created status.
-- PUT `/status/:id`
-  - Body: `{ stat_name?: string, color?: '#RRGGBB', priority?: number }`
-  - Reorders other priorities atomically when priority changes.
-  - 200/404
-- DELETE `/status/:id`
-  - Shifts down higher priorities after delete.
-  - 204/404
+- GET `/status/:id` → single status
+- POST `/status` → Creates new status, `priority` is not needed, DB trigger assigns next priority.
+- PUT `/status/:id` → Reorders other priorities atomically when priority changes.
+- DELETE `/status/:id` → Shifts down higher priorities after delete.
 
 ### Users
 - GET `/users` → list users
