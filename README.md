@@ -21,8 +21,11 @@ cd ../frontend && npm install
 4) Init DB:
 ```bash
 cd backend
-npm run drop   # optional, clears all tables in the schema
 npm run seed   # creates tables, trigger, and seed data
+```
+$${\color{red} This \space drops \space all \space tables \space in \space your \space schema.\space Be \space careful \space when \space running \space this \space command.}$$
+```bash
+npm run drop   # optional, clears all tables in the schema
 ```
 5) Run backend:
 ```bash
