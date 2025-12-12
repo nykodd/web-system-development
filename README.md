@@ -1,4 +1,4 @@
-# Task Board - Kanban Notes
+# Task Board - Notes
 
 ## Project description and features
 - Trello-like task board with columns (statuses) and cards (notes).
@@ -13,7 +13,7 @@
 
 ## Local setup
 1) Prereqs: Node 18+, PostgreSQL running and accessible.
-2) Install deps:
+2) Install dependencies:
 ```bash
 cd backend && npm install
 cd ../frontend && npm install
@@ -22,7 +22,7 @@ cd ../frontend && npm install
 4) Init DB:
 ```bash
 cd backend
-npm run drop   # optional, clears all tables
+npm run drop   # optional, clears all tables in the schema
 npm run seed   # creates tables, trigger, and seed data
 ```
 5) Run backend:
