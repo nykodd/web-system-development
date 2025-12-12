@@ -3,7 +3,6 @@
 ## Project description and features
 - Trello-like task board with columns (statuses) and cards (notes).
 - Notes belong to a user and a status; can be moved left/right between statuses.
-- Status columns have configurable color and priority (order). Priority can be reordered; notes move with their status.
 - Seed data creates sample users, statuses, and notes.
 
 ## Technology stack
@@ -69,8 +68,6 @@ Base URL: `http://localhost:3001/api`
 ### Status
 - GET `/status` → ordered by `priority ASC`.
 - GET `/status/:id` → single status
-- POST `/status` → Creates new status, `priority` is not needed, DB trigger assigns next priority.
-- PUT `/status/:id` → Reorders other priorities atomically when priority changes.
 - DELETE `/status/:id` → Shifts down higher priorities after delete.
 
 ### Users
