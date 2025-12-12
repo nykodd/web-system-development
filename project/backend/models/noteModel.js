@@ -7,9 +7,7 @@ async function getNotes() {
             notes.*,
             users.username,
             status.id_stat,
-            status.stat_name,
-            status.color,
-            status.priority
+            status.stat_name
             FROM notes
             LEFT JOIN users
             ON notes.id_note_user = users.id_user
@@ -31,9 +29,7 @@ async function getNoteById(id) {
             notes.*,
             users.username,
             status.id_stat,
-            status.stat_name,
-            status.color,
-            status.priority
+            status.stat_name
             FROM notes
             LEFT JOIN users
             ON notes.id_note_user = users.id_user
