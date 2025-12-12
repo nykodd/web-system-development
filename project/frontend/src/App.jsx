@@ -14,6 +14,7 @@ const App = () => {
   const [statuses, setStatuses] = useState([])
   const [loading, setLoading] = useState(true)
   const [addingToColumn, setAddingToColumn] = useState(null)
+  const [isImportant, setIsImportant] = useState(false)
 
   useEffect(() => {
     // Load statuses first
@@ -70,7 +71,7 @@ const App = () => {
         id_note_user: note.id_note_user
       })
       .then((response) => {
-        // Update the note with the response data which includes full status info
+        // update the note with the response data which includes full status info
         setNotes(notes.map(n =>
           n.id_note === note.id_note ? response.data : n
         ))
@@ -90,7 +91,7 @@ const App = () => {
 
     const noteObject = {
       content: newNote,
-      important: Math.random() < 0.5,
+      important: isImportant,
       id_note_user: Number(selectedUserId)
     }
 
@@ -102,6 +103,7 @@ const App = () => {
       .then((response) => {
         setNotes(notes.concat(response.data))
         setNewNote('')
+        setIsImportant(false)
         setAddingToColumn(null)
       })
       .catch((error) => {
@@ -140,13 +142,13 @@ const App = () => {
     let newPriority
 
     if (direction === 'left' && currentIndex > 0) {
-      // Move up (left): swap priority with the status before it
+      // move left: swap priority with the status before it
       newPriority = statuses[currentIndex - 1].priority
     } else if (direction === 'right' && currentIndex < statuses.length - 1) {
-      // Move down (right): swap priority with the status after it
+      // move right: swap priority with the status after it
       newPriority = statuses[currentIndex + 1].priority
     } else {
-      return // Can't move in that direction
+      return // cant move in that direction
     }
 
     // The backend will automatically shift other statuses to make room
@@ -157,7 +159,7 @@ const App = () => {
         priority: newPriority
       })
       .then(() => {
-        // Reload statuses to get the updated order (after backend shifts priorities)
+        // reload statuses to get the updated order 
         return axios.get(statusUrl)
       })
       .then((response) => {
@@ -180,7 +182,7 @@ const App = () => {
   return (
     <div className="trello-app">
       <header className="board-header">
-        <h1>📋 Task Board</h1>
+        <h1>Task Board</h1>
         <div className="user-selector">
           <label>User:</label>
           <select
@@ -204,7 +206,7 @@ const App = () => {
                 {status.priority > 1 && (
                   <button
                     className="status-move-btn"
-                    onClick={() => moveStatus(status, 'up')}
+                    onClick={() => moveStatus(status, 'left')}
                     title="Move status left"
                     style={{
                       background: 'none',
@@ -221,7 +223,7 @@ const App = () => {
                 {status.priority < statuses.length && (
                   <button
                     className="status-move-btn"
-                    onClick={() => moveStatus(status, 'down')}
+                    onClick={() => moveStatus(status, 'right')}
                     title="Move status right"
                     style={{
                       background: 'none',
@@ -271,6 +273,17 @@ const App = () => {
                     >
                       ✕
                     </button>
+                    {status.id_stat !== statuses[statuses.length - 1]?.id_stat && (
+                    <button
+                      type="button"
+                      className="done-btn"
+                      onClick={() => {
+                        moveNote(note, statuses[statuses.length - 1]?.id_stat)
+                      }}
+                    >
+                    ✓
+                    </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -283,6 +296,14 @@ const App = () => {
                     placeholder="Enter a title for this card..."
                     autoFocus
                   />
+                  <label className="important-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={isImportant}
+                      onChange={(e) => setIsImportant(e.target.checked)}
+                    />
+                    <span>★ Mark as Important</span>
+                  </label>
                   <div className="form-actions">
                     <button type="submit" className="add-btn">Add Card</button>
                     <button
@@ -291,10 +312,12 @@ const App = () => {
                       onClick={() => {
                         setAddingToColumn(null)
                         setNewNote('')
+                        setIsImportant(false)
                       }}
                     >
                       ✕
                     </button>
+                    
                   </div>
                 </form>
               ) : (
